@@ -1,83 +1,10 @@
 include:
-  - local: '/common/base-build.yml'
-  - local: '/common/docker-build-images.yml'
+  - file: '/build/java/template-java11-gradle.yml'
+    project: "platform/pipelines-templates"
+    ref: "master"
 
 default:
   image: openjdk:16
 
 variables:
-  GRADLE_USER_HOME: "${CI_PROJECT_DIR}/.gradle"
-
-install-dependencies:
-  stage: prepare
-
-  before_script:
-    - mkdir -p "${GRADLE_USER_HOME}"
-    - echo "${PRIVATE_MAVEN_REGISTRY_PROPERTIES}" > "${GRADLE_USER_HOME}/gradle.properties"
-
-  script:
-    - ./gradlew
-    - ./gradlew -v
-
-  cache:
-    key: "${CI_COMMIT_REF_SLUG}"
-    paths:
-      - .gradle/buildOutputCleanup
-      - .gradle/caches
-      - .gradle/native
-      - .gradle/wrapper
-
-test:
-  stage: test
-
-  before_script:
-    - echo "${PRIVATE_MAVEN_REGISTRY_PROPERTIES}" > "${CI_PROJECT_DIR}/.gradle/gradle.properties"
-
-  coverage: '/Total.*?([0-9]{1,3})%/'
-  script:
-    - ./gradlew test
-
-  cache:
-    key: "${CI_COMMIT_REF_SLUG}"
-    paths:
-      - .gradle/buildOutputCleanup
-      - .gradle/caches
-      - .gradle/native
-      - .gradle/wrapper
-    policy: pull
-
-build-jar:
-  stage: post-test
-
-  before_script:
-    - echo "${PRIVATE_MAVEN_REGISTRY_PROPERTIES}" > "${CI_PROJECT_DIR}/.gradle/gradle.properties"
-
-  script:
-    - ./gradlew clean build
-    - ./gradlew jar
-
-  cache:
-    key: "${CI_COMMIT_REF_SLUG}"
-    paths:
-      - .gradle/buildOutputCleanup
-      - .gradle/caches
-      - .gradle/native
-      - .gradle/wrapper
-
-  rules:
-    - if: $CI_COMMIT_TAG
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
-
-  artifacts:
-    when: on_success
-    expire_in: 1 day
-    paths:
-      - build
-
-.docker-job:
-
-  variables:
-    COMMIT_SHA_FILEPATH: /home/java/app/commit.sha
-
-  dependencies:
-    - build-jar
+  IMAGE_NAME: feriapp/pollinator
