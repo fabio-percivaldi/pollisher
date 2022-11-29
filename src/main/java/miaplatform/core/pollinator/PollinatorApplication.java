@@ -1,6 +1,9 @@
 package miaplatform.core.pollinator;
 
 import miaplatform.core.pollinator.model.HttpRequest;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
@@ -19,6 +22,10 @@ import java.util.concurrent.TimeUnit;
 
 @SpringBootApplication
 public class PollinatorApplication {
+	private static final Logger LOGGER = LoggerFactory.getLogger(PollinatorApplication.class);
+
+	@Value("${message.topic.name}")
+	private String topic;
 
 	public static void main(String[] args) {
 		ConfigurableApplicationContext context  = SpringApplication.run(PollinatorApplication.class, args);
@@ -32,43 +39,11 @@ public class PollinatorApplication {
 		List<HttpRequest> requests = repository.findByMethod(HttpMethod.GET);
 
 		for (HttpRequest request : requests) {
-			System.out.println(request);
+			LOGGER.info(request.toString());
 		}
 
-		producer.sendMessage("Hello World");
+		producer.send("test-topic", "Hello World");
 
 		context.close();
-	}
-
-	@Bean
-	public MessageProducer messageProducer() {
-		return new MessageProducer();
-	}
-	public static class MessageProducer {
-
-		@Autowired
-		private KafkaTemplate<String, String> kafkaTemplate;
-
-		@Value(value = "${message.topic.name}")
-		private String topicName;
-
-		public void sendMessage(String message) {
-
-			ListenableFuture<SendResult<String, String>> future = kafkaTemplate.send(topicName, message);
-
-			future.addCallback(new ListenableFutureCallback<SendResult<String, String>>() {
-
-				@Override
-				public void onSuccess(SendResult<String, String> result) {
-					System.out.println("Sent message=[" + message + "] with offset=[" + result.getRecordMetadata()
-							.offset() + "]");
-				}
-
-				@Override
-				public void onFailure(Throwable ex) {
-					System.out.println("Unable to send message=[" + message + "] due to : " + ex.getMessage());
-				}
-			});
-		}
 	}
 }
