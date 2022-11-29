@@ -2,23 +2,22 @@ package miaplatform.core.pollinator;
 
 import miaplatform.core.pollinator.model.HttpRequest;
 import org.bson.Document;
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.HttpMethod;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+@SpringBootTest
 public class MongoDBRepositoryTest {
-    private static final String HOST = "localhost";
-    private static final String PORT = "27017";
-    private static final String DB = "pollinator";
-    private static final String USER = "admin";
-    private static final String PASS = "password";
 
-    private void assertInsertSucceeds(ConfigurableApplicationContext context) {
-        String name = "A";
-
+    @Test
+    void assertInsertSucceeds(ConfigurableApplicationContext context) {
         HttpRequestRepository httpRequestRepository = context.getBean(HttpRequestRepository.class);
 
         httpRequestRepository.deleteAll();
@@ -26,6 +25,7 @@ public class MongoDBRepositoryTest {
 
         request = httpRequestRepository.save(request);
 
-        assertNotNull(httpRequestRepository.findAll());
+        List<HttpRequest> requests = httpRequestRepository.findAll();
+        assertEquals(1, requests.size());
     }
 }
